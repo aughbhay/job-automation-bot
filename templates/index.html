@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobBot — Direct Skill Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #fbfaf7; /* Editorial warm paper base */
+        }
+        .mono { font-family: 'Space Mono', monospace; }
+        
+        /* Premium structural borders with stark offsets instead of shadows */
+        .card-border {
+            border: 2px solid #1a1a1a;
+            transition: all 0.15s ease-in-out;
+        }
+        .card-border-hover:hover {
+            box-shadow: 5px 5px 0px #e0533c; /* Accent Terracotta Pop */
+            transform: translate(-3px, -3px);
+        }
+        
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body class="text-neutral-900 antialiased min-h-screen pb-24">
+
+    <nav class="border-b-2 border-neutral-900 bg-white sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="font-bold tracking-tight text-lg flex items-center gap-2">
+                <span class="text-neutral-900">JobBot</span>
+                <span class="mono text-[10px] bg-[#e0533c] text-white px-2 py-0.5 tracking-wider font-bold">LIVE INDEX</span>
+            </div>
+            <div class="mono text-xs text-neutral-500 uppercase tracking-wider hidden sm:block">
+                System Status: Operational
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 mt-12">
+        
+        <div class="lg:col-span-5 space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold tracking-tight text-neutral-900">Search Filters</h2>
+                <p class="text-sm text-neutral-500 mt-1">Upload your profile assets and define parameters to filter the index.</p>
+            </div>
+
+            <form id="botSearchForm" enctype="multipart/form-data" class="space-y-5">
+                <div class="bg-white card-border p-4 rounded-none border-neutral-900">
+                    <label class="block mono text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">01 // Document Attachment</label>
+                    <div class="flex items-center gap-4">
+                        <label class="bg-neutral-900 text-white hover:bg-[#e0533c] text-xs font-bold uppercase tracking-wide px-4 py-3 cursor-pointer transition-colors transition-all active:scale-[0.98]">
+                            Choose Resume
+                            <input type="file" id="resume" name="resume" required class="hidden" />
+                        </label>
+                        <span id="dropText" class="text-xs text-neutral-400 font-medium truncate italic">No file selected</span>
+                    </div>
+                </div>
+
+                <div class="bg-white card-border p-4 rounded-none border-neutral-900">
+                    <label class="block mono text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">02 // Target Role</label>
+                    <input type="text" id="role" name="role" required placeholder="e.g. AI Engineer, Data Scientist" class="w-full bg-transparent border-b border-neutral-300 focus:border-[#e0533c] text-neutral-900 py-1 text-base outline-none transition-colors font-medium placeholder:text-neutral-300" />
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white card-border p-4 rounded-none border-neutral-900">
+                        <label class="block mono text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">03 // Location Target</label>
+                        <input type="text" id="location" name="location" required placeholder="e.g. Bangalore" class="w-full bg-transparent border-b border-neutral-300 focus:border-[#e0533c] text-neutral-900 py-1 text-base outline-none transition-colors font-medium placeholder:text-neutral-300" />
+                    </div>
+                    <div class="bg-white card-border p-4 rounded-none border-neutral-900 relative">
+                        <label class="block mono text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2">04 // Experience Tier</label>
+                        <select id="experience" name="experience" class="w-full bg-transparent border-b border-neutral-300 focus:border-[#e0533c] text-neutral-900 py-1 text-base outline-none transition-colors font-medium cursor-pointer pr-6">
+                            <option value="0-1">Fresher (0-1 yrs)</option>
+                            <option value="1-3">Intermediate (1-3 yrs)</option>
+                            <option value="3+">Senior (3+ yrs)</option>
+                        </select>
+                        <span class="absolute right-4 bottom-5 pointer-events-none text-neutral-400 text-xs">▼</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-[#e0533c] hover:bg-neutral-900 text-white font-bold text-xs uppercase tracking-widest py-4 transition-all shadow-[4px_4px_0px_#111111] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_#111111] cursor-pointer">
+                    Search Jobs →
+                </button>
+            </form>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+            
+            <div id="inlineError" class="hidden bg-red-50 border-2 border-red-900 p-5 text-red-900 text-xs font-medium mono">
+                <span class="font-bold">[ERROR SYSTEM ALERT]</span> <span id="errorText"></span>
+            </div>
+            
+            <div id="loader" class="hidden py-16 text-center border-2 border-neutral-900 bg-white shadow-[4px_4px_0px_#111111]">
+                <span class="mono text-xs font-bold uppercase tracking-widest inline-flex items-center gap-2">
+                    <span class="inline-block animate-spin font-serif text-base">/</span> Indexing real-time records...
+                </span>
+            </div>
+
+            <div id="resultsWrapper" class="space-y-5">
+                
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-neutral-900">Endless Opportunities</h2>
+                        <p class="text-sm text-neutral-500 mt-1">Configure your constraints on the left to start processing live vector indices across major web endpoints.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-white card-border p-5 border-neutral-900">
+                            <span class="text-xs font-bold uppercase tracking-wider mono text-[#cca025]">Active Channels</span>
+                            <div class="text-2xl font-bold text-neutral-900 mt-2">LinkedIn & Naukri</div>
+                            <p class="text-xs text-neutral-400 mt-1">Scraping continuous pipelines safely.</p>
+                        </div>
+                        <div class="bg-white card-border p-5 border-neutral-900">
+                            <span class="text-xs font-bold uppercase tracking-wider mono text-[#508058]">Target Pipelines</span>
+                            <div class="text-2xl font-bold text-neutral-900 mt-2">Internshala APIs</div>
+                            <p class="text-xs text-neutral-400 mt-1">Aggregated tracking for early careers.</p>
+                        </div>
+                        <div class="bg-white card-border p-5 border-neutral-900">
+                            <span class="text-xs font-bold uppercase tracking-wider mono text-neutral-400">Total Indexed</span>
+                            <div class="text-2xl font-bold text-neutral-900 mt-2">4 Tech Roles</div>
+                            <p class="text-xs text-neutral-400 mt-1">Data Science, Analytics, AI Engineering.</p>
+                        </div>
+                        <div class="bg-white card-border p-5 border-neutral-900">
+                            <span class="text-xs font-bold uppercase tracking-wider mono text-neutral-400">Global Hubs</span>
+                            <div class="text-2xl font-bold text-neutral-900 mt-2">Bangalore Core</div>
+                            <p class="text-xs text-neutral-400 mt-1">Localized geolocation engine target.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-2 border-dashed border-neutral-300 p-6 text-center text-xs mono text-neutral-400 uppercase tracking-wide">
+                        Ready for system execution. Attach parameters to query matching nodes.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Track visual input file parameters update
+        const fileInput = document.getElementById('resume');
+        const dropText = document.getElementById('dropText');
+
+        fileInput.addEventListener('change', function(e) {
+            if(this.files.length > 0) {
+                dropText.textContent = this.files[0].name;
+                dropText.classList.remove('text-neutral-400', 'italic');
+                dropText.classList.add('text-[#508058]', 'font-bold');
+            }
+        });
+
+        // Search execution post pipeline dispatcher hook
+        document.getElementById('botSearchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errBox = document.getElementById('inlineError');
+            const errorText = document.getElementById('errorText');
+            const loader = document.getElementById('loader');
+            const wrapper = document.getElementById('resultsWrapper');
+
+            errBox.classList.add('hidden');
+            wrapper.innerHTML = '';
+            loader.classList.remove('hidden');
+
+            const formData = new FormData(this);
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                loader.classList.add('hidden');
+
+                if (!response.ok || result.status === 'error') {
+                    errorText.innerHTML = result.message;
+                    errBox.classList.remove('hidden');
+                    return;
+                }
+
+                if (result.data.length === 0) {
+                    wrapper.innerHTML = `
+                        <div class="text-center py-12 border-2 border-neutral-900 bg-neutral-50 text-xs font-bold uppercase tracking-wider text-neutral-400 mono">
+                            No matching profiles indexed for this location hub.
+                        </div>`;
+                    return;
+                }
+
+                result.data.forEach((job) => {
+                    const tags = job.skills.map(s => `
+                        <span class="text-[10px] mono font-bold bg-neutral-100 text-neutral-700 border border-neutral-300 px-2 py-0.5">
+                            ${s}
+                        </span>
+                    `).join('');
+                    
+                    const card = `
+                        <div class="bg-white card-border card-border-hover rounded-none p-6 relative mb-4">
+                            <div class="flex justify-between items-start gap-4">
+                                <div>
+                                    <h3 class="text-lg font-bold tracking-tight text-neutral-900 hover:text-[#e0533c] transition-colors">${job.title}</h3>
+                                    <p class="text-xs font-bold text-neutral-400 mono uppercase mt-0.5">${job.company}</p>
+                                </div>
+                                <div class="bg-neutral-900 text-white font-mono text-xs font-bold px-2.5 py-1 uppercase tracking-wide shrink-0">
+                                    Score: ${job.match_score}%
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 my-4 text-xs font-medium text-neutral-600">
+                                <div class="flex items-center gap-1"><span>Location:</span> <strong class="text-neutral-900">${job.location}</strong></div>
+                                <div class="flex items-center gap-1><span>Experience:</span> <strong class="text-neutral-900">${job.experience}</strong></div>
+                                <div class="flex items-center gap-1"><span>Comp:</span> <strong class="text-neutral-900">${job.salary}</strong></div>
+                                <div class="flex items-center gap-1 text-neutral-400 mono text-[11px]"><span>[${job.source}]</span></div>
+                            </div>
+                            
+                            <div class="flex flex-wrap gap-1.5 pt-4 border-t border-neutral-100">${tags}</div>
+                        </div>
+                    `;
+                    wrapper.insertAdjacentHTML('beforeend', card);
+                });
+
+            } catch (err) {
+                loader.classList.add('hidden');
+                errorText.innerHTML = "System execution pipeline connection breakdown.";
+                errBox.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
